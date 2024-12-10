@@ -1434,13 +1434,15 @@ app.put('/data/update/accounts/:id', async (req, res) => {
 
 // ==> Logout <==
 app.post('/api/logout', (req, res) => {
-    // Xóa token khỏi cookie
+    // Kiểm tra môi trường và cấu hình xóa cookie cho phù hợp
+    const isProduction = process.env.NODE_ENV === 'production';
+
     res.clearCookie('token', {
-        path: '/' ,
-        secure: process.env.NODE_ENV === 'production',  // Chỉ đặt thành true khi bạn dùng HTTPS (cần thiết cho production)
-        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // 'None' cho production, 'Lax' cho development
-        domain: process.env.NODE_ENV === 'production'? 't-sport-api.onrender.com' : undefined 
-    }); // Xóa token khỏi cookie
+        path: '/', // Xóa cookie cho tất cả đường dẫn
+        secure: isProduction, // Chỉ sử dụng secure cookie khi môi trường là production
+        sameSite: isProduction ? 'None' : 'Lax', // Sử dụng 'None' khi production, 'Lax' khi phát triển
+        domain: isProduction ? 't-sport-api.onrender.com' : undefined // Thiết lập domain nếu môi trường production
+    });
 
     // Phản hồi đăng xuất thành công
     res.status(200).json({ message: 'Logged out successfully' });
