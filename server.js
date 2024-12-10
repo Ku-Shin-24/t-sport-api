@@ -1274,10 +1274,10 @@ app.post('/login', async (req, res) => {
         // 5. Lưu token vào cookie
         res.cookie('token', token, {
             httpOnly: true, // Cookie không thể truy cập bằng JavaScript
-            secure: true, //process.env.NODE_ENV === 'production',  // Chỉ đặt thành true khi bạn dùng HTTPS (cần thiết cho production)
-            sameSite: 'None', //process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // 'None' cho production, 'Lax' cho development
+            secure: process.env.NODE_ENV === 'production',  // Chỉ đặt thành true khi bạn dùng HTTPS (cần thiết cho production)
+            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // 'None' cho production, 'Lax' cho development
             maxAge: 3600000, // 1 giờ (đơn vị là mili giây)
-            domain: 't-sport-api.onrender.com'
+            domain: process.env.NODE_ENV === 'production'? 't-sport-api.onrender.com' : undefined 
         });
 
         // 6. Gửi phản hồi thành công về client
@@ -1437,9 +1437,9 @@ app.post('/api/logout', (req, res) => {
     // Xóa token khỏi cookie
     res.clearCookie('token', {
         path: '/' ,
-        secure: true, //process.env.NODE_ENV === 'production',  // Chỉ đặt thành true khi bạn dùng HTTPS (cần thiết cho production)
-        sameSite: 'None', //process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // 'None' cho production, 'Lax' cho development
-        domain: 't-sport-api.onrender.com'
+        secure: process.env.NODE_ENV === 'production',  // Chỉ đặt thành true khi bạn dùng HTTPS (cần thiết cho production)
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // 'None' cho production, 'Lax' cho development
+        domain: process.env.NODE_ENV === 'production'? 't-sport-api.onrender.com' : undefined 
     }); // Xóa token khỏi cookie
 
     // Phản hồi đăng xuất thành công
