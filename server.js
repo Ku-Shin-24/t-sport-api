@@ -977,20 +977,17 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
 
 
   // ==> API kiểm tra hành vi người dùng <==
-  app.get('/api/user-behavior/check', async (req, res) => {
+  app.get('/api/user-behavior/check', authenticateToken, async (req, res) => {
     try {
         // Lấy thông tin user từ cookie
-        const userCookie = req.cookies.user;
-        console.error('Thông tin Cookie:', userCookie);
-        if (!userCookie) {
+        const maNguoiDung = req.user.MaNguoiDung;
+        console.error('Thông tin Cookie:', maNguoiDung);
+        if (!maNguoiDung) {
             return res.status(401).json({ 
                 hasUserBehavior: false,
                 message: 'Không tìm thấy thông tin người dùng' 
             });
         }
-
-        const user = JSON.parse(userCookie); // Chuyển đổi cookie thành object
-        const maNguoiDung = user.MaNguoiDung;
 
         // Tiếp tục kiểm tra hành vi người dùng
         const [rows] = await db.execute(`
