@@ -1289,8 +1289,8 @@ app.post('/login', async (req, res) => {
         console.log('Current SECRET_KEY:', process.env.SECRET_KEY);
         // 5. Lưu token vào cookie
         res.cookie('token', token, {
-            httpOnly: true, // Cookie không thể truy cập bằng JavaScript
-            secure: process.env.NODE_ENV === 'production',  // Chỉ đặt thành true khi bạn dùng HTTPS (cần thiết cho production)
+            httpOnly: false, // Cookie không thể truy cập bằng JavaScript
+            secure: false,  // Chỉ đặt thành true khi bạn dùng HTTPS (cần thiết cho production)
             sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // 'None' cho production, 'Lax' cho development
             maxAge: 3600000, // 1 giờ (đơn vị là mili giây)
             domain: process.env.NODE_ENV === 'production'? 't-sport-api.onrender.com' : undefined 
