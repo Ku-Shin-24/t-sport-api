@@ -793,8 +793,9 @@ app.post('/api/user-action', authenticateToken, async (req, res) => {
 
 // ==> API đề xuất sản phẩm <==
 // Hàm tính điểm tương tác của người dùng với sản phẩm
-function tinhDiemTuongTac(loaiHanhVi){
-    switch(loaiHanhVi){
+// Hàm tính điểm tương tác
+function tinhDiemTuongTac(loaiHanhVi) {
+    switch(loaiHanhVi) {
         case 'Xem':
             return 1;
         case 'ThemGioHang':
@@ -812,14 +813,14 @@ function tinhDoTuongDong(vector1, vector2) {
     let norm1 = 0;
     let norm2 = 0;
 
-    for(const productID in vector1) {
-        if(vector2[productID]){
+    for (const productID in vector1) {
+        if (vector2[productID]) {
             dotProduct += vector1[productID] * vector2[productID];
         }
         norm1 += vector1[productID] * vector1[productID];
     }
 
-    for(const productID in vector2) {
+    for (const productID in vector2) {
         norm2 += vector2[productID] * vector2[productID];
     }
 
@@ -842,6 +843,7 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
         `);
 
         console.log('Rows from HANHVINGUOIDUNG:', rows);
+        console.log('Total behavior data count:', rows.length);
 
         // 2. Tạo ma trận người dùng - sản phẩm
         const userProductMatrix = {};
@@ -862,8 +864,8 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
 
         console.log('Target User Vector:', targetUserVector);
 
-        for(const otherUserId in userProductMatrix) {
-            if(otherUserId != maNguoiDung) {
+        for (const otherUserId in userProductMatrix) {
+            if (otherUserId != maNguoiDung) {
                 const similarity = tinhDoTuongDong(
                     targetUserVector,
                     userProductMatrix[otherUserId]
@@ -876,6 +878,10 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
         }
 
         console.log('Similarities:', similarities);
+
+        similarities.forEach(similarity => {
+            console.log(`Similarity with user ${similarity.userId}:`, similarity.similarity);
+        });
 
         // 4. Sắp xếp và lấy top N người dùng tương đồng nhất
         similarities.sort((a, b) => b.similarity - a.similarity);
@@ -898,10 +904,14 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
 
         console.log('Products Interacted Set:', productsInteractedSet);
 
+        productsInteracted.forEach(product => {
+            console.log('Interacted Product:', product.MaSanPham);
+        });
+
         // 6. Tính điểm đề xuất cho các sản phẩm
         const productScores = {};
 
-        for(const similarUser of topSimilarUsers) {
+        for (const similarUser of topSimilarUsers) {
             const [userProducts] = await db.execute(`
                 SELECT MaSanPham, LoaiHanhVi 
                 FROM HANHVINGUOIDUNG 
@@ -911,7 +921,7 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
             console.log(`User Products for ${similarUser.userId}:`, userProducts);
 
             userProducts.forEach(product => {
-                if(!productsInteractedSet.has(product.MaSanPham)) {
+                if (!productsInteractedSet.has(product.MaSanPham)) {
                     productScores[product.MaSanPham] = 
                         (productScores[product.MaSanPham] || 0) + 
                         similarUser.similarity * tinhDiemTuongTac(product.LoaiHanhVi);
@@ -929,8 +939,12 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
 
         console.log('Recommended Products:', recommendedProducts);
 
+        recommendedProducts.forEach(product => {
+            console.log('Recommended Product:', product);
+        });
+
         // 8. Lấy thông tin chi tiết của các sản phẩm đề xuất
-        if(recommendedProducts.length > 0) {
+        if (recommendedProducts.length > 0) {
             const [productDetails] = await db.execute(`
                 SELECT * FROM SANPHAM 
                 WHERE MaSanPham IN (${recommendedProducts.join(',')})
@@ -959,6 +973,7 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
         });
     }
 });
+
 
 
   // ==> API kiểm tra hành vi người dùng <==
