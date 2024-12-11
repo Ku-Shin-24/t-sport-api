@@ -19,8 +19,13 @@ const { timeStamp } = require('console');
 const app = express()
 const port = process.env.PORT || 3001
 
-app.use(cors(
-))
+const corsOptions = {
+  origin: 'https://lephuocthien.id.vn', // Thay đổi thành miền của bạn
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
 app.use(bodyParser.json())
 app.use(express.json());
 
