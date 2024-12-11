@@ -981,6 +981,7 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
     try {
         // Lấy thông tin user từ cookie
         const userCookie = req.cookies.user;
+        console.error('Thông tin Cookie:', userCookie);
         if (!userCookie) {
             return res.status(401).json({ 
                 hasUserBehavior: false,
