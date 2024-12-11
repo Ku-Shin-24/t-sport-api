@@ -988,10 +988,10 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
             });
         }
 
-        const user = JSON.parse(userCookie);
+        const user = JSON.parse(userCookie); // Chuyển đổi cookie thành object
         const maNguoiDung = user.MaNguoiDung;
 
-        // Kiểm tra xem người dùng có hành vi nào không
+        // Tiếp tục kiểm tra hành vi người dùng
         const [rows] = await db.execute(`
             SELECT COUNT(*) as behaviorCount 
             FROM HANHVINGUOIDUNG 
