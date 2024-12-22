@@ -1016,10 +1016,13 @@ app.get('/api/recommendations', authenticateToken, async (req, res) => {
 
 
 // ==> API Tính tổng doanh thu theo tháng <==
-app.get('/api/revenue', async (req, res) => {
+app.get('/api/revenue/:year', async (req, res) => {
+    const year = req.params.year;
+    
     const query = `
       SELECT 
-          DATE_FORMAT(D.NgayDatHang, '%Y-%m') AS month, 
+          DATE_FORMAT(D.NgayDatHang, '%m') AS month,
+          YEAR(D.NgayDatHang) AS year, 
           SUM(C.SoLuong * C.Gia) AS totalRevenue
       FROM 
           DONHANG D
@@ -1028,19 +1031,28 @@ app.get('/api/revenue', async (req, res) => {
       WHERE 
           D.NgayDatHang IS NOT NULL
           AND C.TrangThai != 'Đã Hủy'
+          AND YEAR(D.NgayDatHang) = ?
       GROUP BY 
-          month
+          month, year
       ORDER BY 
           month;
     `;
     
     try {
-      const [results] = await db.execute(query);
-      console.log("Results from DB:", results); // In ra để kiểm tra
-      const formattedResults = results.map(item => ({
-        month: item.month,
-        totalRevenue: item.totalRevenue || 0,
-      }));
+      const [results] = await db.execute(query, [year]);
+      console.log("Results from DB:", results);
+      
+      // Tạo mảng đầy đủ 12 tháng với doanh thu 0 nếu không có dữ liệu
+      const formattedResults = Array.from({ length: 12 }, (_, i) => {
+        // Tìm dữ liệu cho tháng trong results
+        const monthData = results.find(item => parseInt(item.month) === i + 1);
+        return {
+          month: (i + 1).toString().padStart(2, '0'), // Format tháng thành "01", "02", etc.
+          year: year,
+          totalRevenue: monthData ? monthData.totalRevenue : 0,
+        };
+      });
+      
       res.json(formattedResults);
     } catch (err) {
       console.error("Database query error:", err);
@@ -1051,10 +1063,13 @@ app.get('/api/revenue', async (req, res) => {
 
 
   // ==> API Tính tổng sản phẩm bán ra theo tháng <==
-  app.get('/api/products-sales', async (req, res) => {
+    app.get('/api/products-sales/:year', async (req, res) => {
+    const year = req.params.year;
+    
     const query = `
       SELECT 
-          DATE_FORMAT(D.NgayDatHang, '%Y-%m') AS month, 
+          DATE_FORMAT(D.NgayDatHang, '%m') AS month,
+          YEAR(D.NgayDatHang) AS year,
           SUM(C.SoLuong) AS totalSales
       FROM 
           DONHANG D
@@ -1063,25 +1078,34 @@ app.get('/api/revenue', async (req, res) => {
       WHERE 
           D.NgayDatHang IS NOT NULL
           AND C.TrangThai != 'Đã Hủy'
+          AND YEAR(D.NgayDatHang) = ?
       GROUP BY 
-          month
+          month, year
       ORDER BY 
           month;
     `;
   
     try {
-      const [results] = await db.execute(query);
+      const [results] = await db.execute(query, [year]);
       console.log("Results from DB:", results);
-      const formattedResults = results.map(item => ({
-        month: item.month,
-        totalSales: item.totalSales || 0,
-      }));
+      
+      // Tạo mảng đầy đủ 12 tháng
+      const formattedResults = Array.from({ length: 12 }, (_, i) => {
+        // Tìm dữ liệu cho tháng trong results
+        const monthData = results.find(item => parseInt(item.month) === i + 1);
+        return {
+          month: (i + 1).toString().padStart(2, '0'), // Format tháng thành "01", "02", etc.
+          year: year,
+          totalSales: monthData ? monthData.totalSales : 0,
+        };
+      });
+      
       res.json(formattedResults);
     } catch (err) {
       console.error("Database query error:", err);
-      res.status(500).json({ error: err.message });  // Trả lỗi với message chi tiết
+      res.status(500).json({ error: err.message });
     }
-  });
+});
 
 
   // ==> API Tính sản phẩm tồn kho <==
@@ -1120,7 +1144,8 @@ app.get('/api/revenue', async (req, res) => {
 
 
 // ==> API Tính top sản phẩm bán chạy nhất <==
-app.get('/api/top-products', async (req, res) => {
+app.get('/api/top-products/:year', async (req, res) => {
+    const year = req.params.year;
     const query = `
         SELECT 
             SP.TenSanPham,
@@ -1138,6 +1163,7 @@ app.get('/api/top-products', async (req, res) => {
             DONHANG DH ON CTDH.MaDonHang = DH.MaDonHang
         WHERE
             CTDH.TrangThai != 'Đã Hủy'
+            AND YEAR(DH.NgayDatHang) = ? 
         GROUP BY 
             SP.MaSanPham, SP.TenSanPham, SP.GiaBan
         ORDER BY 
@@ -1146,7 +1172,7 @@ app.get('/api/top-products', async (req, res) => {
     `;
 
     try {
-        const [results] = await db.execute(query);
+        const [results] = await db.execute(query, [year]);
         console.log("Results from DB:", results);
         res.json(results);
     } catch (err) {
@@ -1154,7 +1180,6 @@ app.get('/api/top-products', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
 
 // ==> API tính top khách hàng mua nhiều sản phẩm nhất <==
 app.get('/api/top-users', async (req, res) => {
